@@ -1,11 +1,7 @@
 import math
-import pygame
-
-pg=pygame
 
 
-def get_angle_btw_player_and_cursor(pt1):
-    pt2 = pg.mouse.get_pos()
+def get_angle_btw_p1_and_p2(pt1, pt2):
     x_diff = pt2[0] - pt1[0]
     y_diff = pt2[1] - pt1[1]
     a = -math.degrees(math.atan2(y_diff, x_diff))
@@ -18,15 +14,12 @@ class Satellite():
         self.rad = rad
         self.pos = [0, 0]
 
-
-    def make_turn(self, base_point):
+    def make_turn(self, base_point, mouse_pos):
         bp = base_point
         rad = self.rad
-        a = math.radians(get_angle_btw_player_and_cursor(base_point))
+        a = math.radians(get_angle_btw_p1_and_p2(base_point, mouse_pos))
         sin_a = math.sin(a)
         cos_a = math.cos(a)
-        pos = self.pos
-        pos[0] = int(bp[0] + rad*sin_a)
-        pos[1] = int(bp[1] + rad*cos_a)
+        self.pos[0] = int(bp[0] + rad*sin_a)
+        self.pos[1] = int(bp[1] + rad*cos_a)
         # print("sat pos: " + str(pos) + str((sin_a, cos_a)))
-        return pos

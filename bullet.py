@@ -1,6 +1,7 @@
 from config import *
 import math
 
+
 class Bullet:
     def __init__(self, pos, size, angle):
         self.center = pos

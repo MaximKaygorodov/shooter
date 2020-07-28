@@ -11,6 +11,17 @@ class Entity():
         self.speed_y = 0
         self.rect = self.center = []
         self.update_pos()
+        self.color = YELLOW
+
+    def bounce_away_from(self, obj):
+        if self.pos_x < obj.pos_x:
+            self.speed_x = -5
+        if self.pos_x > obj.pos_x:
+            self.speed_x = 5
+        if self.pos_y < obj.pos_y:
+            self.speed_y = -5
+        if self.pos_y > obj.pos_y:
+            self.speed_y = 5
 
     def update_pos(self):
         self.rect = [self.pos_x, self.pos_y, self.size, self.size]

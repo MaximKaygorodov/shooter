@@ -26,25 +26,53 @@ def shot(cool_down):
     return cool_down
 
 
+def calc_around_player(rad):
+    around_player = [player.center[0] + random.randint(-rad, rad), player.center[1] + random.randint(-rad, rad)]
+    return around_player
+
+
 def move_enemies(enemy_cd):
     enemy_cd += 1
-    if enemy_cd > 30:
+    if enemy_cd > ENEMY_COOLDOWN:
         for enemy in enemies:
-            angle = get_angle_btw_p1_and_p2(enemy.center, player.center)
+            around_player = calc_around_player(PLAYER_SIZE)
+            angle = get_angle_btw_p1_and_p2(enemy.center, around_player)
             enemy.move_to_player(math.radians(angle), True)
+        spawn_enemy()
 
         enemy_cd = 0
     for enemy in enemies:
         enemy.slow_down()
         enemy.make_turn()
+        collide_entities()
         collide_with_boundaries(enemy)
     return enemy_cd
 
 
+def spawn_enemy():
+    away_form_player = 100
+    spawn_pos = [random.randint(0, WIDTH - ENEMY_SIZE),
+                 random.randint(0, HEIGHT - ENEMY_SIZE)]
+    if spawn_pos[0] in range(player.pos_x - away_form_player, player.pos_x+player.size+away_form_player):
+        if spawn_pos[1] in range(player.pos_y - away_form_player, player.pos_y+player.size+away_form_player):
+            spawn_enemy()
+    else:
+        enemies.append(Entity(spawn_pos, ENEMY_SIZE))
+
+
 def collide_entities():
+    global game_over
     for enemy in enemies:
         if distance_btp(enemy.center, player.center) < 110:
-            print("Gameover!")
+            game_over = True
+        for any_other_enemy in enemies:
+            if any_other_enemy != enemy and distance_btp(enemy.center, any_other_enemy.center) < 60:
+                 enemy.bounce_away_from(any_other_enemy)
+        for any_bullet in bullets:
+            if distance_btp(enemy.center, any_bullet.center) < BULLET_SPEED:
+                enemies.remove(enemy)
+                bullets.remove(any_bullet)
+    return game_over
 
 
 def collide_with_boundaries(ent):
@@ -68,64 +96,87 @@ players_satellite = Satellite(SATELLITE_RADIUS)
 bullets = []
 enemies = []
 
-move_keys = [False, False, False, False]    # move [w, a, s, d]
-shot_cool_down_tracker = 0
-enemy_cool_down = 0
+
+def restart_menu():
+    while True:
+        # listening for keys
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                sys.exit()
+
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_r:
+                    start_game()
+                if event.key == pg.K_ESCAPE:
+                    sys.exit()
+
 
 # main loop
-while True:
-    # listening for keys
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            sys.exit()
+def start_game():
+    global player, players_satellite,bullets, enemies, game_over
+    player = Entity([200, 200], PLAYER_SIZE)
+    players_satellite = Satellite(SATELLITE_RADIUS)
+    bullets = []
+    enemies = []
+    game_over = False
 
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_w:
-                move_keys[0] = True
-            if event.key == pg.K_a:
-                move_keys[1] = True
-            if event.key == pg.K_s:
-                move_keys[2] = True
-            if event.key == pg.K_d:
-                move_keys[3] = True
-            if event.key == pg.K_e:
-                enemies.append(Entity([random.randint(0, WIDTH - ENEMY_SIZE),
-                                       random.randint(0, HEIGHT - ENEMY_SIZE)],
-                                       ENEMY_SIZE))
+    move_keys = [False, False, False, False]  # move [w, a, s, d]
+    shot_cool_down_tracker = 0
+    enemy_cool_down = 0
+    while not game_over:
+        # listening for keys
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                sys.exit()
 
-        if event.type == pg.KEYUP:
-            if event.key == pg.K_w:
-                move_keys[0] = False
-            if event.key == pg.K_a:
-                move_keys[1] = False
-            if event.key == pg.K_s:
-                move_keys[2] = False
-            if event.key == pg.K_d:
-                move_keys[3] = False
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_w:
+                    move_keys[0] = True
+                if event.key == pg.K_a:
+                    move_keys[1] = True
+                if event.key == pg.K_s:
+                    move_keys[2] = True
+                if event.key == pg.K_d:
+                    move_keys[3] = True
+                if event.key == pg.K_e:
+                    spawn_enemy()
 
-    # calculating
-    player.calc_direction(move_keys)
-    player.make_turn()                  # Goes after all changes in speed
-    enemy_cool_down = move_enemies(enemy_cool_down)
-    collide_with_boundaries(player)     # Goes after all moves/turns that can collide
-    collide_entities()
-    for bullet in bullets:
-        bullet.make_turn()
-    players_satellite.make_turn(player.center, pg.mouse.get_pos())
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_w:
+                    move_keys[0] = False
+                if event.key == pg.K_a:
+                    move_keys[1] = False
+                if event.key == pg.K_s:
+                    move_keys[2] = False
+                if event.key == pg.K_d:
+                    move_keys[3] = False
 
-    shot_cool_down_tracker = shot(shot_cool_down_tracker)
+        # calculating
+        player.calc_direction(move_keys)
+        player.make_turn()  # Goes after all changes in speed
+        enemy_cool_down = move_enemies(enemy_cool_down)
+        collide_with_boundaries(player)  # Goes after all moves/turns that can collide
+        for bullet in bullets:
+            bullet.make_turn()
+        players_satellite.make_turn(player.center, pg.mouse.get_pos())
 
-    screen.fill(GREEN)
+        shot_cool_down_tracker = shot(shot_cool_down_tracker)
 
-    # rendering
-    for enemy in enemies:
-        pg.draw.rect(screen, YELLOW, enemy.rect)
-    for bullet in bullets:
-        pg.draw.rect(screen, RED, bullet.rect)
-    pg.draw.circle(screen, RED, players_satellite.pos, 8)
-    # pg.draw.rect(screen, RED, player.rect)
-    screen.blit(dude, [player.pos_x, player.pos_y])
+        screen.fill(GREEN)
 
-    # updating
-    clock.tick(30)
-    pg.display.update()
+        # rendering
+        for enemy in enemies:
+            pg.draw.rect(screen, enemy.color, enemy.rect)
+        for bullet in bullets:
+            pg.draw.rect(screen, RED, bullet.rect)
+        pg.draw.circle(screen, RED, players_satellite.pos, 8)
+        # pg.draw.rect(screen, RED, player.rect)
+        screen.blit(dude, [player.pos_x, player.pos_y])
+
+        # updating
+        clock.tick(30)
+        pg.display.update()
+    restart_menu()
+
+
+start_game()

@@ -1,5 +1,6 @@
 from config import *
 import math
+from math_functions import *
 
 
 class Bullet:
@@ -11,6 +12,7 @@ class Bullet:
         self.speed = BULLET_SPEED
         self.angle = angle
         self.rect = [self.x, self.y, self.size, self.size]
+        self.cool_down = 0
 
     def make_turn(self):
         sin_a = math.sin(math.radians(self.angle))
@@ -22,3 +24,5 @@ class Bullet:
     def update_pos(self):
         self.rect = [self.x, self.y, self.size, self.size]
         self.center = [self.x + self.size//2, self.y + self.size//2]
+
+

@@ -1,12 +1,7 @@
 import math
+from math_functions import *
 
 
-def get_angle_btw_p1_and_p2(pt1, pt2):
-    x_diff = pt2[0] - pt1[0]
-    y_diff = pt2[1] - pt1[1]
-    a = -math.degrees(math.atan2(y_diff, x_diff))
-    # print("Angle btw: [" + str(p1) + "][" + str(p2) + "]: " + str(a))
-    return a + 90
 
 
 class Satellite():

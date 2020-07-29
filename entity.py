@@ -50,7 +50,7 @@ class Entity():
         self.speed_y *= 0.9
         self.speed_x *= 0.9
 
-    def move_to_player(self, angle, is_move):
+    def move_in_direction(self, angle, is_move):
         if is_move:
             sin_a = math.sin(angle)
             cos_a = math.cos(angle)
